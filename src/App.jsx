@@ -7,6 +7,9 @@ import Profile from './pages/Profile';
 import { ThemeProvider } from './context/ThemeContext';
 import EmployeesPage from './pages/EmployeesPage';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE;
+
+
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
   const location = useLocation();
@@ -14,6 +17,8 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
+  console.log("base url", API_BASE_URL);
+
   return (
     <AuthProvider>
       <ThemeProvider>

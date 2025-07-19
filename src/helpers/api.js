@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://54.252.53.117/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE;
 const AUTH_KEY = 'myapp_auth_token';
 
 const api = axios.create({
