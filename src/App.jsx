@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import HomePage from './pages/Home';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
-import BookPage from './pages/EmployeesPage';
 import Profile from './pages/Profile';
 import { ThemeProvider } from './context/ThemeContext';
 import EmployeesPage from './pages/EmployeesPage';

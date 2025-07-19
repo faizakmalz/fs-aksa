@@ -1,214 +1,199 @@
 import { useEffect, useState } from "react";
 import Layout from "../layouts/Layout";
-import initialBooks from "../helpers/initialBooks";
-import paginate from "../helpers/paginate";
+import api from "../helpers/api";
 import { useSearchParams } from "react-router-dom";
 
-const STORAGE_KEY = "books";
-
 const EmployeesPage = () => {
-  const [books, setBooks] = useState([]);
-  const [form, setForm] = useState({ id: null, title: "", author: "", year: "", image: "" });
+  const [employees, setEmployees] = useState([]);
+  const [form, setForm] = useState({
+    id: null,
+    name: "",
+    phone: "",
+    position: "",
+    division: "",
+    image: null,
+  });
   const [editing, setEditing] = useState(false);
+  const [pagination, setPagination] = useState({ current_page: 1, last_page: 1 });
+
   const [searchParams, setSearchParams] = useSearchParams();
   const searchTerm = searchParams.get("q") || "";
+  const [searchInput, setSearchInput] = useState(searchTerm);
   const page = Number(searchParams.get("page")) || 1;
-  const pageSize = 5;
+
+  console.log("searchparams", searchParams.toString());
+  console.log("searchterms", searchTerm);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      setBooks(JSON.parse(saved));
-    } else {
-      setBooks(initialBooks);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initialBooks));
+    fetchEmployees();
+  }, [searchParams]);
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await api.get("/employees", {
+        params: { name: searchTerm, page },
+      });
+      setEmployees(res.data.data.employees);
+      setPagination(res.data.pagination);
+    } catch (err) {
+      console.error("fetch failed", err);
     }
-  }, []);
-
-  useEffect(() => {
-    const params = {};
-    if (searchTerm) params.q = searchTerm;
-    params.page = String(page);
-    setSearchParams(params);
-  }, [searchTerm, page]);
-
-  const saveToStorage = (data) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   };
 
-  const filteredBooks = books.filter((book) =>
-    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    book.author.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const { paginated: paginatedBooks, totalPages } = paginate(filteredBooks, page, 5);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title || !form.author || !form.year) return;
-
-    let updatedBooks;
-    if (editing) {
-      updatedBooks = books.map((b) => (b.id === form.id ? form : b));
-    } else {
-      const newBook = { ...form, id: Date.now() };
-      updatedBooks = [...books, newBook];
+    const formData = new FormData();
+    formData.append("name", form.name);
+    formData.append("phone", form.phone);
+    formData.append("position", form.position);
+    formData.append("division", form.division);
+    if (form.image instanceof File) {
+      formData.append("image", form.image);
     }
 
-    setBooks(updatedBooks);
-    saveToStorage(updatedBooks);
-    setForm({ id: null, title: "", author: "", year: "", image: "" });
-    setEditing(false);
+    try {
+      if (editing) {
+        await api.post(`/employees/${form.id}?_method=PUT`, formData);
+      } else {
+        await api.post("/employees", formData);
+      }
+      resetForm();
+      fetchEmployees();
+    } catch (err) {
+      console.error("submit failed", err.message);
+    }
   };
 
-  const handleEdit = (book) => {
-    setForm(book);
+  const handleEdit = (emp) => {
+    setForm({
+      id: emp.id,
+      name: emp.name,
+      phone: emp.phone,
+      position: emp.position,
+      division: emp.division.id,
+      image: null,
+    });
     setEditing(true);
   };
 
-  const handleDelete = (id) => {
-    const updated = books.filter((b) => b.id !== id);
-    setBooks(updated);
-    saveToStorage(updated);
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/employees/${id}`);
+      fetchEmployees();
+    } catch (err) {
+      console.error("delete failed", err.message);
+    }
+  };
+
+  const resetForm = () => {
+    setForm({
+      id: null,
+      name: "",
+      phone: "",
+      position: "",
+      division: "",
+      image: null,
+    });
+    setEditing(false);
   };
 
   const goToPage = (newPage) => {
-    const currentParams = Object.fromEntries(searchParams.entries());
-    setSearchParams({ ...currentParams, page: String(newPage) });
+    setSearchParams({ q: searchTerm, page: newPage.toString() });
   };
 
   return (
     <Layout>
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">Daftar Buku</h1>
+        <h1 className="text-2xl font-bold mb-4">Daftar Pegawai</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mb-6 bg-gray-100 dark:bg-black p-4 rounded shadow">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 mb-6 bg-gray-100 dark:bg-black p-4 rounded shadow"
+          encType="multipart/form-data"
+        >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
-              type="text"
-              placeholder="Judul Buku"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="border border-gray-300 dark:border-white p-2 rounded w-full"
-            />
-            <input
-              type="text"
-              placeholder="Penulis"
-              value={form.author}
-              onChange={(e) => setForm({ ...form, author: e.target.value })}
-              className="border border-gray-300 dark:border-white p-2 rounded w-full"
-            />
-            <input
-              type="number"
-              placeholder="Tahun"
-              value={form.year}
-              onChange={(e) => setForm({ ...form, year: e.target.value })}
-              className="border border-gray-300 dark:border-white p-2 rounded w-full"
-            />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    setForm((prev) => ({ ...prev, image: reader.result }));
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }}
-              className="border border-gray-300 dark:border-white p-2 rounded w-full"
-            />
+            <input type="text" placeholder="Nama" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="border p-2 rounded w-full" required />
+            <input type="text" placeholder="No. Telepon" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="border p-2 rounded w-full" required />
+            <input type="text" placeholder="Posisi" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} className="border p-2 rounded w-full" required />
+            <input type="number" placeholder="ID Divisi" value={form.division} onChange={(e) => setForm({ ...form, division: e.target.value })} className="border p-2 rounded w-full" required />
+            <input type="file" accept="image/*" onChange={(e) => setForm({ ...form, image: e.target.files[0] })} className="border p-2 rounded w-full" />
           </div>
           <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-            {editing ? "Update Buku" : "Tambah Buku"}
+            {editing ? "Update Pegawai" : "Tambah Pegawai"}
           </button>
         </form>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col md:flex-row mb-4 gap-4 py-2 rounded">
           <input
             type="text"
-            placeholder="Cari judul..."
-            value={searchTerm}
-            onChange={(e) => {
-              const q = e.target.value
-              setSearchParams({ q, page: "1" });
-            }}
-            className="border border-gray-300 dark:border-white p-2 rounded w-full"
+            placeholder="Cari nama..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="border p-2 rounded w-full"
           />
+          <button
+            onClick={() => setSearchParams({ q: searchInput, page: "1" })}
+            className="bg-blue-500 text-white px-4 rounded md:w-[200px]"
+          >
+            Cari
+          </button>
         </div>
 
-        <div className="rounded-lg">
-          <table className="min-w-full rounded-lg text-left shadow-md">
-            <thead className="bg-gray-200 rounded-lg dark:bg-gray-800">
-              <tr className="rounded-lg">
-                <th className="p-2">Judul</th>
-                <th className="p-2">Penulis</th>
-                <th className="p-2">Tahun</th>
-                <th className="p-2">Cover</th>
-                <th className="p-2">Aksi</th>
+
+        <table className="min-w-full shadow-md text-left rounded">
+          <thead className="bg-gray-200 dark:bg-gray-800">
+            <tr>
+              <th className="p-2">Nama</th>
+              <th className="p-2">Telepon</th>
+              <th className="p-2">Posisi</th>
+              <th className="p-2">Divisi</th>
+              <th className="p-2">Foto</th>
+              <th className="p-2">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employees.map((emp) => (
+              <tr key={emp.id} className="border-t">
+                <td className="p-2">{emp.name}</td>
+                <td className="p-2">{emp.phone}</td>
+                <td className="p-2">{emp.position}</td>
+                <td className="p-2">{emp.division.name}</td>
+                <td className="p-2">
+                  {emp.image && (
+                    <img src={emp.image} alt={emp.name} className="w-16 h-16 object-cover rounded" />
+                  )}
+                </td>
+                <td className="p-2 space-x-2">
+                  <button onClick={() => handleEdit(emp)} className="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+                  <button onClick={() => handleDelete(emp.id)} className="bg-red-500 text-white px-2 py-1 rounded">Hapus</button>
+                </td>
               </tr>
-            </thead>
-            <tbody className="rounded-lg">
-              {paginatedBooks.map((book) => (
-                <tr key={book.id} className="border-gray-400">
-                  <td className="p-2">{book.title}</td>
-                  <td className="p-2">{book.author}</td>
-                  <td className="p-2">{book.year}</td>
-                  <td className="p-2">
-                    {book.image && (
-                      <img
-                        src={book.image}
-                        alt={book.title}
-                        className="w-16 h-20 object-cover rounded"
-                      />
-                    )}
-                  </td>
-                  <td className="p-2 space-x-2">
-                    <button
-                      onClick={() => handleEdit(book)}
-                      className="bg-yellow-500 text-white px-2 py-1 rounded"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(book.id)}
-                      className="bg-red-500 text-white px-2 py-1 rounded"
-                    >
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {paginatedBooks.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="p-4 text-center text-gray-700">
-                    Tidak ada buku.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+            ))}
+            {employees.length === 0 && (
+              <tr>
+                <td colSpan="6" className="p-4 text-center text-gray-700">Tidak ada pegawai.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
 
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-4 space-x-2">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goToPage(i + 1)}
-                  className={`px-3 py-1 rounded ${
-                    page === i + 1
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-300 dark:bg-gray-800 text-black dark:text-white"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {pagination.last_page > 1 && (
+          <div className="flex justify-center mt-4 space-x-2">
+            {Array.from({ length: pagination.last_page }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goToPage(i + 1)}
+                className={`px-3 py-1 rounded ${
+                  pagination.current_page === i + 1
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-300"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </Layout>
   );

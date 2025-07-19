@@ -4,15 +4,19 @@ import Layout from "../layouts/Layout";
 
 const Profile = () => {
     const { user, logout, updateProfile } = useAuth();
-    const [form, setForm] = useState({ name: user?.name || "",  address: user?.address, phone: user?.phone});
+    const [form, setForm] = useState({ name: user?.name || "",  email: user?.email, phone: user?.phone});
 
-    const handleSubmit = () => {
-        console.log('USER SUBMIT', user, form);
-        if (form?.name !== "" || form?.address !== "" || form?.phone !== "" ) {
-            updateProfile(form?.name, form?.address, form?.phone);
-            alert("Successfully Update Profile");
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            if (form.name || form.email || form.phone) {
+                await updateProfile(form.name, form.email, form.phone);
+                alert("Successfully Updated Profile");
+            }
+        } catch (err) {
+            console.error('submit failed');
         }
-    }
+    };
 
     return (
         <Layout>
@@ -29,9 +33,9 @@ const Profile = () => {
                         />
                         <input
                             type="text"
-                            placeholder="Alamat"
-                            value={form.address}
-                            onChange={(e) => setForm({ ...form, address: e.target.value })}
+                            placeholder="Email"
+                            value={form.email}
+                            onChange={(e) => setForm({ ...form, email: e.target.value })}
                             className="border p-2 rounded w-full"
                         />
                          <input

@@ -17,15 +17,14 @@ export const AuthProvider = ({ children }) => {
       const res = await api.post('/login', { username, password });
       const { token, admin } = res.data.data;
 
-      // Save token and user data
       setToken(token);
       localStorage.setItem(USER_KEY, JSON.stringify(admin));
       setUser(admin);
 
       return { success: true };
     } catch (err) {
-      console.error('Login error:', err.response?.data || err.message);
-      return { success: false, message: err.response?.data?.message || 'Login gagal' };
+      console.error('login failed', err.message);
+      return 'Login gagal';
     }
   };
 
@@ -33,17 +32,32 @@ export const AuthProvider = ({ children }) => {
     try {
       await api.post('/logout');
     } catch (err) {
-      console.warn('Logout request failed (maybe token expired).');
+      console.error('logout failed');
     }
     clearToken();
     localStorage.removeItem(USER_KEY);
     setUser(null);
   };
 
-  const updateProfile = (updatedData) => {
-    const newUser = { ...user, ...updatedData };
-    localStorage.setItem(USER_KEY, JSON.stringify(newUser));
-    setUser(newUser);
+  const updateProfile = async (name, email, phone) => {
+    try {
+      const res = await api.put("/admin/profile", {
+        username: user?.username,
+        name,
+        email,
+        phone,
+      });
+      console.log("res", res)
+      setUser((prev) => ({
+        ...prev,
+        name,
+        email,
+        phone,
+      }));
+    } catch (err) {
+      console.error("fail", err.message);
+      throw err;
+    }
   };
 
   return (
