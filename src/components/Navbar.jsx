@@ -67,21 +67,21 @@ const Navbar = () => {
           </button>
           {dropdownOpenMobile && (
             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded shadow z-50">
-              <Link to="/employees" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white text-sm">
+              <Link to="/employees" className="block px-4 py-2 text-black hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white text-sm">
                 Employees
               </Link>
               <button
                 onClick={toggleDarkMode}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white text-sm"
+                className="block w-full text-black text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white text-sm"
               >
                 {isDark ? 'Light Mode' : 'Dark Mode'}
               </button>
-              <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white text-sm">
+              <Link to="/profile" className="block text-black px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white text-sm">
                 Profile
               </Link>
               <button
                 onClick={logout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white text-sm"
+                className="block w-full text-left text-black px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-white text-sm"
               >
                 Logout
               </button>

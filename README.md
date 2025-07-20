@@ -1,12 +1,35 @@
-# React + Vite
+# Kepegawaian Gedangan FE + BE (be-aksa repo)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple web-based employee management system built for internal use for aksamedia test.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- ✅ Admin login system (secured using Laravel Sanctum)
+- 📋 Employee data management (CRUD)
+- 🔍 Search and pagination
+- 📸 Upload employee images
+- 🌗 Dark mode support
+- ⚙️ Responsive UI using Tailwind CSS
+- 🔐 Protected routes using JWT & context-based auth
+- ☁️ Deployed Frontend: Netlify  
+- 🚀 Deployed Backend: Laravel on EC2 (with Cloudflare tunnel) - ON be-aksa REPO
 
-## Expanding the ESLint configuration
+## 🔧 Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Layer       | Technology             |
+|-------------|------------------------|
+| Frontend    | React + Vite + Tailwind |
+| Auth        | JWT with Laravel Sanctum |
+| Backend     | Laravel 12.x (API only) |
+| Deployment  | Netlify (FE) + EC2/Nginx (BE) |
+| Proxy       | Cloudflare Tunnel (HTTPS for backend API) |
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js v18+
+- PHP 8.1+
+- Composer
+- MySQL or any compatible database
+
